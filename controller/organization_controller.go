@@ -528,49 +528,6 @@ func (r *OrganizationReconciler) createOrUpdateObject(ctx context.Context, obj c
 }
 
 func (r *OrganizationReconciler) provisionRBAC(ctx context.Context, org *platformv1alpha1.Organization) error {
-	role := &rbacv1.Role{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      constants.OrganizationAdminRoleName,
-			Namespace: org.Status.Namespace,
-			Labels:    r.orgLabels(org),
-		},
-		Rules: []rbacv1.PolicyRule{
-			{
-				APIGroups: []string{""},
-				Resources: []string{"*"},
-				Verbs:     []string{"*"},
-			},
-			{
-				APIGroups: []string{"tekton.dev"},
-				Resources: []string{"*"},
-				Verbs:     []string{"*"},
-			},
-			{
-				APIGroups: []string{"aphex.io"},
-				Resources: []string{"repobindings"},
-				Verbs:     []string{"get", "list", "watch", "create", "update", "patch"},
-			},
-		},
-	}
-
-	existingRole := &rbacv1.Role{}
-	err := r.Get(ctx, client.ObjectKey{Name: role.Name, Namespace: role.Namespace}, existingRole)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			if err := r.Create(ctx, role); err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	} else {
-		existingRole.Rules = role.Rules
-		existingRole.Labels = role.Labels
-		if err := r.Update(ctx, existingRole); err != nil {
-			return err
-		}
-	}
-
 	for _, adminUser := range org.Spec.AdminUsers {
 		roleBinding := &rbacv1.RoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
@@ -586,7 +543,7 @@ func (r *OrganizationReconciler) provisionRBAC(ctx context.Context, org *platfor
 			},
 			RoleRef: rbacv1.RoleRef{
 				APIGroup: "rbac.authorization.k8s.io",
-				Kind:     "Role",
+				Kind:     "ClusterRole",
 				Name:     constants.OrganizationAdminRoleName,
 			},
 		}
