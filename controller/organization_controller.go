@@ -157,9 +157,9 @@ func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
-	if org.Status.Phase != constants.PhaseActive {
+	if org.Status.Phase != constants.PhaseReady {
 		if err := r.statusHelper.PatchStatus(ctx, org, map[string]interface{}{
-			"phase":   constants.PhaseActive,
+			"phase":   constants.PhaseReady,
 			"message": "Organization provisioned successfully",
 		}); err != nil {
 			timer.ObserveError(metrics.ClassifyError(err))
