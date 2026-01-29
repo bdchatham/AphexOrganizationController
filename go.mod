@@ -3,7 +3,7 @@ module github.com/bdchatham/AphexOrganizationController
 go 1.25.1
 
 require (
-	github.com/bdchatham/AphexControllerRuntime v0.0.0
+	github.com/bdchatham/AphexControllerRuntime v0.0.7
 	github.com/cloudflare/cloudflare-go v0.116.0
 	github.com/external-secrets/external-secrets/apis v0.0.0-20260123185000-8c022d3c96ca
 	github.com/go-logr/logr v1.4.3
@@ -95,5 +95,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
-
-replace github.com/bdchatham/AphexControllerRuntime => ../AphexControllerRuntime
