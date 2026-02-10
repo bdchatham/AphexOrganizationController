@@ -4,6 +4,7 @@ metadata:
   name: organization-controller
   namespace: platform-system
   labels:
+    app: organization-controller
     app.kubernetes.io/name: organization-controller
     app.kubernetes.io/component: controller
     app.kubernetes.io/part-of: aphex-platform
@@ -11,25 +12,36 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: organization-controller
+      app: organization-controller
   template:
     metadata:
       labels:
+        app: organization-controller
         app.kubernetes.io/name: organization-controller
         app.kubernetes.io/component: controller
+        app.kubernetes.io/part-of: aphex-platform
     spec:
       serviceAccountName: organization-controller
-      securityContext:
-        runAsNonRoot: true
-        seccompProfile:
-          type: RuntimeDefault
       containers:
         - name: manager
-          image: organization-controller:latest
+          image: ghcr.io/bdchatham/organization-controller:latest
           args:
             - --leader-elect=true
             - --metrics-bind-address=:8080
             - --health-probe-bind-address=:8081
+          env:
+            - name: CLOUDFLARE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-credentials
+                  key: api-token
+                  optional: true
+            - name: CLOUDFLARE_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-credentials
+                  key: account-id
+                  optional: true
           ports:
             - name: metrics
               containerPort: 8080
@@ -37,12 +49,6 @@ spec:
             - name: health
               containerPort: 8081
               protocol: TCP
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: true
           livenessProbe:
             httpGet:
               path: /healthz
@@ -62,3 +68,16 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            capabilities:
+              drop:
+                - ALL
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30

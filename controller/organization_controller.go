@@ -214,6 +214,9 @@ func (r *OrganizationReconciler) handleDeletionWithHelper(ctx context.Context, l
 		helpers.NewCleanupStep("ClusterRoleBinding", func(ctx context.Context) error {
 			return r.cleanupClusterRoleBinding(ctx, org)
 		}),
+		helpers.NewCleanupStep("KB trigger RoleBinding", func(ctx context.Context) error {
+			return r.cleanupKBTriggerRoleBinding(ctx, org)
+		}),
 		helpers.NewCleanupStep("Organization namespace", func(ctx context.Context) error {
 			return r.cleanupNamespace(ctx, org)
 		}),
@@ -253,6 +256,21 @@ func (r *OrganizationReconciler) cleanupClusterRoleBinding(ctx context.Context, 
 	}
 	if err := r.Delete(ctx, crb); err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete ClusterRoleBinding: %w", err)
+	}
+	return nil
+}
+
+func (r *OrganizationReconciler) cleanupKBTriggerRoleBinding(ctx context.Context, org *platformv1alpha1.Organization) error {
+	roleBinding := &rbacv1.RoleBinding{}
+	key := client.ObjectKey{Name: "knowledgebase-trigger-manager", Namespace: org.Status.Namespace}
+	if err := r.Get(ctx, key, roleBinding); err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
+		return fmt.Errorf("failed to get KB trigger RoleBinding: %w", err)
+	}
+	if err := r.Delete(ctx, roleBinding); err != nil && !errors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete KB trigger RoleBinding: %w", err)
 	}
 	return nil
 }
@@ -330,6 +348,16 @@ func (r *OrganizationReconciler) provisionOrganization(ctx context.Context, org 
 
 	if err := r.provisionEventListenerServiceAccount(ctx, org); err != nil {
 		return fmt.Errorf("failed to provision EventListener ServiceAccount: %w", err)
+	}
+
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context canceled during provisioning: %w", ctx.Err())
+	default:
+	}
+
+	if err := r.provisionKBTriggerRoleBinding(ctx, org); err != nil {
+		return fmt.Errorf("failed to provision KB trigger RoleBinding: %w", err)
 	}
 
 	return nil
@@ -622,6 +650,27 @@ func (r *OrganizationReconciler) provisionEventListenerServiceAccount(ctx contex
 	}
 
 	return nil
+}
+
+func (r *OrganizationReconciler) provisionKBTriggerRoleBinding(ctx context.Context, org *platformv1alpha1.Organization) error {
+	roleBinding := &rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "knowledgebase-trigger-manager",
+			Namespace: org.Status.Namespace,
+			Labels:    r.orgLabels(org),
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: rbacv1.GroupName,
+			Kind:     "ClusterRole",
+			Name:     "knowledgebase-trigger-manager",
+		},
+		Subjects: []rbacv1.Subject{{
+			Kind:      "ServiceAccount",
+			Name:      "knowledgebase-controller",
+			Namespace: constants.DefaultPlatformNamespace,
+		}},
+	}
+	return r.createOrUpdateObject(ctx, roleBinding)
 }
 
 func generateWebhookSecret() (string, error) {

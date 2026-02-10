@@ -3,13 +3,17 @@ kind: ServiceAccount
 metadata:
   name: organization-controller
   namespace: platform-system
+  labels:
+    app: organization-controller
+    app.kubernetes.io/name: organization-controller
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/part-of: aphex-platform
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: organization-controller
 rules:
-  # Organization CRD
   - apiGroups: ["aphex.io"]
     resources: ["organizations"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
@@ -19,43 +23,33 @@ rules:
   - apiGroups: ["aphex.io"]
     resources: ["organizations/finalizers"]
     verbs: ["update"]
-  # Core resources
   - apiGroups: [""]
-    resources: ["namespaces"]
+    resources: ["namespaces", "secrets", "configmaps", "serviceaccounts"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
-  - apiGroups: [""]
-    resources: ["serviceaccounts"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
-  # Deployments
   - apiGroups: ["apps"]
     resources: ["deployments"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
-  # RBAC
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["roles", "rolebindings"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["clusterrolebindings"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  # Tekton Triggers
-  - apiGroups: ["triggers.tekton.dev"]
-    resources: ["eventlisteners", "triggerbindings"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
-  # External Secrets
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterroles"]
+    verbs: ["bind"]
+    resourceNames:
+      - "organization-admin"
+      - "eventlistener-access"
   - apiGroups: ["external-secrets.io"]
-    resources: ["clustersecretstores"]
+    resources: ["clustersecretstores", "externalsecrets"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  # Events
-  - apiGroups: [""]
-    resources: ["events"]
-    verbs: ["create", "patch"]
-  # Leader election
+  - apiGroups: ["triggers.tekton.dev"]
+    resources: ["eventlisteners", "triggerbindings", "triggertemplates", "triggers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]

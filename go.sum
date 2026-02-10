@@ -738,6 +738,8 @@ knative.dev/pkg v0.0.0-20250415155312-ed3e2158b883 h1:UeOY7009M0EHwdyW3P35Fc1U6F
 knative.dev/pkg v0.0.0-20250415155312-ed3e2158b883/go.mod h1:ptwLYr04MAyeoRvhnhhz0FFkVZTdYJV2QWnw9sZyFSM=
 knative.dev/serving v0.39.4 h1:9IlFE7GsORKhI92DIZbF88hplQYM73T1l4W50UxZwF8=
 knative.dev/serving v0.39.4/go.mod h1:bWylSgwnRZeL659qy7m3/TZioYk25TIfusPUEeR695A=
+pgregory.net/rapid v1.2.0 h1:keKAYRcjm+e1F0oAuU5F5+YPAWcyxNNRK2wud503Gnk=
+pgregory.net/rapid v1.2.0/go.mod h1:PY5XlDGj0+V1FCq0o192FdRhpKHGTRIWBgqjDBTrq04=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
