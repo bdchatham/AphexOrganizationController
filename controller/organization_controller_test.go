@@ -8,6 +8,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"pgregory.net/rapid"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -15,8 +16,8 @@ import (
 
 func testScheme() *runtime.Scheme {
 	scheme := runtime.NewScheme()
-	_ = rbacv1.AddToScheme(scheme)
-	_ = platformv1alpha1.AddToScheme(scheme)
+	utilruntime.Must(rbacv1.AddToScheme(scheme))
+	utilruntime.Must(platformv1alpha1.AddToScheme(scheme))
 	return scheme
 }
 
