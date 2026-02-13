@@ -370,7 +370,6 @@ func (r *OrganizationReconciler) provisionNamespace(ctx context.Context, org *pl
 			Labels: map[string]string{
 				constants.LabelOrganization: org.Name,
 				constants.LabelManagedBy:    constants.ManagedByOrganizationController,
-				constants.LabelAphexOrg:     org.Name,
 			},
 		},
 	}
@@ -494,7 +493,7 @@ func (r *OrganizationReconciler) provisionESOSecretStore(ctx context.Context, or
 			Conditions: []esv1.ClusterSecretStoreCondition{{
 				NamespaceSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
-						constants.LabelAphexOrg: org.Name,
+						constants.LabelOrganization: org.Name,
 					},
 				},
 			}},
