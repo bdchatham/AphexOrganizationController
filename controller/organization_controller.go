@@ -360,6 +360,16 @@ func (r *OrganizationReconciler) provisionOrganization(ctx context.Context, org 
 		return fmt.Errorf("failed to provision KB trigger RoleBinding: %w", err)
 	}
 
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context canceled during provisioning: %w", ctx.Err())
+	default:
+	}
+
+	if err := r.provisionEventTaskResolver(ctx, org); err != nil {
+		return fmt.Errorf("failed to provision event task resolver: %w", err)
+	}
+
 	return nil
 }
 
@@ -667,6 +677,45 @@ func (r *OrganizationReconciler) provisionKBTriggerRoleBinding(ctx context.Conte
 			Kind:      "ServiceAccount",
 			Name:      "knowledgebase-controller",
 			Namespace: constants.DefaultPlatformNamespace,
+		}},
+	}
+	return r.createOrUpdateObject(ctx, roleBinding)
+}
+
+func (r *OrganizationReconciler) provisionEventTaskResolver(ctx context.Context, org *platformv1alpha1.Organization) error {
+	sa := &corev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      constants.EventTaskResolverServiceAccount,
+			Namespace: org.Status.Namespace,
+			Labels:    r.orgLabels(org),
+		},
+	}
+	existingSA := &corev1.ServiceAccount{}
+	if err := r.Get(ctx, client.ObjectKey{Name: sa.Name, Namespace: sa.Namespace}, existingSA); err != nil {
+		if errors.IsNotFound(err) {
+			if err := r.Create(ctx, sa); err != nil {
+				return fmt.Errorf("failed to create event-task-resolver SA: %w", err)
+			}
+		} else {
+			return err
+		}
+	}
+
+	roleBinding := &rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      constants.EventTaskResolverRole,
+			Namespace: org.Status.Namespace,
+			Labels:    r.orgLabels(org),
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: rbacv1.GroupName,
+			Kind:     "ClusterRole",
+			Name:     constants.EventTaskResolverRole,
+		},
+		Subjects: []rbacv1.Subject{{
+			Kind:      "ServiceAccount",
+			Name:      constants.EventTaskResolverServiceAccount,
+			Namespace: org.Status.Namespace,
 		}},
 	}
 	return r.createOrUpdateObject(ctx, roleBinding)

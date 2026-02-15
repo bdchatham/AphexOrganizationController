@@ -3,7 +3,7 @@ module github.com/bdchatham/AphexOrganizationController
 go 1.25.1
 
 require (
-	github.com/bdchatham/AphexControllerRuntime v0.2.1-0.20260212214729-b8f171fc336e
+	github.com/bdchatham/AphexControllerRuntime v0.2.1-0.20260215005754-7c4e4c385bb6
 	github.com/cloudflare/cloudflare-go v0.116.0
 	github.com/external-secrets/external-secrets/apis v0.0.0-20260123185000-8c022d3c96ca
 	github.com/go-logr/logr v1.4.3
